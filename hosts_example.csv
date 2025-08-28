@@ -1,0 +1,8 @@
+host,description
+192.168.1.1,路由器管理界面
+192.168.1.100,服务器A
+10.0.0.1,交换机管理
+example.com,示例网站
+test-server.local,测试服务器
+http://192.168.0.1,另一个路由器
+https://admin.example.com,管理后台

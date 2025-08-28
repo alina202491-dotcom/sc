@@ -178,7 +178,7 @@ jobs:
         docker save weak-password-checker:${{ steps.tag.outputs.tag_name }} | gzip > weak-password-checker-docker-${{ steps.tag.outputs.tag_name }}.tar.gz
 
     - name: Upload Docker image as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: docker-image
         path: weak-password-checker-docker-${{ steps.tag.outputs.tag_name }}.tar.gz

@@ -1,0 +1,146 @@
+name: Workflow Status Summary
+
+on:
+  workflow_run:
+    workflows: 
+      - "CI"
+      - "Security Scan"
+      - "Code Quality"
+      - "Performance Testing"
+      - "Documentation"
+    types:
+      - completed
+  schedule:
+    # Run status summary daily at 8 AM UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  summary:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Generate Workflow Status Summary
+      run: |
+        cat > workflow-status.md << 'EOF'
+        # 🔄 GitHub Actions 工作流状态摘要
+        
+        > 生成时间: $(date)
+        > 仓库: ${{ github.repository }}
+        > 分支: ${{ github.ref_name }}
+        
+        ## 📊 当前状态概览
+        
+        | 工作流 | 状态 | 最后运行 | 描述 |
+        |--------|------|----------|------|
+        | CI | [![CI](https://github.com/${{ github.repository }}/actions/workflows/ci.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/ci.yml) | - | 持续集成测试 |
+        | Security Scan | [![Security](https://github.com/${{ github.repository }}/actions/workflows/security.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/security.yml) | - | 安全扫描 |
+        | Code Quality | [![Code Quality](https://github.com/${{ github.repository }}/actions/workflows/code-quality.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/code-quality.yml) | - | 代码质量检查 |
+        | Performance | [![Performance](https://github.com/${{ github.repository }}/actions/workflows/performance.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/performance.yml) | - | 性能测试 |
+        | Documentation | [![Docs](https://github.com/${{ github.repository }}/actions/workflows/docs.yml/badge.svg)](https://github.com/${{ github.repository }}/actions/workflows/docs.yml) | - | 文档生成 |
+        
+        ## 🔧 工作流详情
+        
+        ### CI 工作流
+        - **触发条件**: Push 到 main/master/develop 分支，PR
+        - **测试环境**: Python 3.8-3.12
+        - **检查项目**:
+          - ✅ 语法检查 (flake8)
+          - ✅ 代码格式检查 (black)
+          - ✅ 导入排序检查 (isort)
+          - ✅ 类型检查 (mypy)
+          - ✅ 脚本验证
+        
+        ### Security 工作流  
+        - **触发条件**: Push 到 main/master，PR，每日定时
+        - **安全检查**:
+          - 🔒 依赖漏洞扫描 (Safety, pip-audit)
+          - 🔒 代码安全扫描 (Bandit)
+          - 🔒 密钥泄露检测 (TruffleHog)
+          - 🔒 代码质量分析 (CodeQL)
+        
+        ### Code Quality 工作流
+        - **触发条件**: Push，PR
+        - **质量检查**:
+          - 📊 代码复杂度分析 (radon)
+          - 📊 可维护性指数
+          - 📊 代码风格检查 (pylint)
+          - 🎨 自动格式化 (PR 时)
+        
+        ### Performance 工作流
+        - **触发条件**: Push 到 main/master，PR，每周定时
+        - **性能测试**:
+          - ⚡ 初始化时间测试
+          - ⚡ 内存使用分析
+          - ⚡ 并发性能测试
+          - ⚡ 依赖加载时间
+        
+        ### Documentation 工作流
+        - **触发条件**: 文档文件变更
+        - **文档检查**:
+          - 📖 API 文档生成
+          - 📖 Markdown 格式检查
+          - 📖 链接有效性验证
+        
+        ## 🏷️ 发布工作流
+        
+        ### Release 工作流
+        - **触发条件**: 版本标签 (v*.*.*)，手动触发
+        - **发布流程**:
+          - 📦 创建发布包 (ZIP, TAR.GZ)
+          - 📦 构建 Docker 镜像
+          - 📝 自动生成变更日志
+          - 🚀 创建 GitHub Release
+        
+        ## 🤖 自动化功能
+        
+        ### Dependabot
+        - **更新频率**: 每周一
+        - **监控内容**:
+          - Python 依赖包
+          - GitHub Actions 版本
+        
+        ### 自动化任务
+        - 🔄 代码自动格式化 (PR)
+        - 🔄 安全扫描报告上传
+        - 🔄 性能测试报告生成
+        - 🔄 文档自动更新
+        
+        ## 📋 问题模板
+        
+        项目提供了以下 Issue 模板：
+        - 🐛 Bug 报告
+        - ✨ 功能请求  
+        - 🔒 安全报告
+        
+        ## 🔗 快速链接
+        
+        - [Actions 页面](https://github.com/${{ github.repository }}/actions)
+        - [Security 页面](https://github.com/${{ github.repository }}/security)
+        - [Issues 页面](https://github.com/${{ github.repository }}/issues)
+        - [Pull Requests](https://github.com/${{ github.repository }}/pulls)
+        - [Releases](https://github.com/${{ github.repository }}/releases)
+        
+        ---
+        
+        *此摘要由 GitHub Actions 自动生成*
+        EOF
+
+    - name: Upload workflow status summary
+      uses: actions/upload-artifact@v3
+      with:
+        name: workflow-status-summary
+        path: workflow-status.md
+
+  notification:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    steps:
+    - name: Workflow failure notification
+      run: |
+        echo "::warning::Workflow ${{ github.event.workflow_run.name }} failed"
+        echo "Workflow: ${{ github.event.workflow_run.name }}"
+        echo "Conclusion: ${{ github.event.workflow_run.conclusion }}"
+        echo "URL: ${{ github.event.workflow_run.html_url }}"

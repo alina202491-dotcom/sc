@@ -1,0 +1,133 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees:
+  - "@me"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢您报告错误！请填写以下信息以帮助我们更好地理解和解决问题。
+
+  - type: input
+    id: version
+    attributes:
+      label: 版本信息
+      description: 您使用的弱密码检测工具版本
+      placeholder: "例如: v1.0.0 或 latest commit hash"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: python-version
+    attributes:
+      label: Python 版本
+      description: 您使用的 Python 版本
+      options:
+        - Python 3.8
+        - Python 3.9
+        - Python 3.10
+        - Python 3.11
+        - Python 3.12
+        - 其他 (请在描述中说明)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 操作系统
+      description: 您的操作系统
+      options:
+        - Linux (Ubuntu/Debian)
+        - Linux (CentOS/RHEL)
+        - Linux (Arch)
+        - Linux (其他发行版)
+        - macOS
+        - Windows 10
+        - Windows 11
+        - 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: 错误描述
+      description: 详细描述您遇到的问题
+      placeholder: |
+        清楚地描述发生了什么错误...
+        
+        例如:
+        - 运行某个命令时出现错误
+        - 检测结果不正确
+        - 程序崩溃或卡死
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 期望行为
+      description: 描述您期望发生的情况
+      placeholder: 描述应该发生什么...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: 重现步骤
+      description: 提供重现问题的详细步骤
+      placeholder: |
+        1. 运行命令 '...'
+        2. 点击 '....'
+        3. 向下滚动到 '....'
+        4. 看到错误
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: 错误输出
+      description: 如果有错误消息，请粘贴完整的错误输出
+      render: shell
+      placeholder: |
+        请粘贴完整的错误输出，包括堆栈跟踪...
+
+  - type: textarea
+    id: configuration
+    attributes:
+      label: 配置信息
+      description: 提供相关的配置信息
+      placeholder: |
+        - 主机文件格式: CSV/Excel
+        - 使用的参数: --max-workers 10 --timeout 30
+        - 检测的主机数量: 100
+        - 其他相关配置...
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他信息
+      description: 添加任何其他有助于解决问题的信息
+      placeholder: |
+        - 屏幕截图
+        - 日志文件
+        - 相关环境信息
+        - 之前是否工作正常
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 确认
+      description: 请确认以下事项
+      options:
+        - label: 我已经搜索了现有的问题，确认这不是重复报告
+          required: true
+        - label: 我已经尝试使用最新版本重现此问题
+          required: true
+        - label: 我已经提供了足够的信息来重现此问题
+          required: true

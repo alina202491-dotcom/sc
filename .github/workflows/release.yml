@@ -1,0 +1,184 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  validate-release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Validate script
+      run: |
+        python -m py_compile weak_password_checker.py
+        python weak_password_checker.py --help
+
+    - name: Run basic tests
+      run: |
+        # Test that the script can import and basic functionality works
+        python -c "
+        import weak_password_checker
+        checker = weak_password_checker.WeakPasswordChecker('hosts_example.csv')
+        print('Script validation successful')
+        "
+
+  create-release:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Get tag name
+      id: tag
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "tag_name=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+        else
+          echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Generate a simple changelog from recent commits
+        echo "## Changes in ${{ steps.tag.outputs.tag_name }}" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        git log $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md || echo "- Initial release" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### Features" >> CHANGELOG.md
+        echo "- 弱密码检测和安全扫描" >> CHANGELOG.md
+        echo "- 支持多种文件格式 (CSV, Excel)" >> CHANGELOG.md
+        echo "- 并发检测提高效率" >> CHANGELOG.md
+        echo "- 详细的检测报告生成" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### Installation" >> CHANGELOG.md
+        echo "\`\`\`bash" >> CHANGELOG.md
+        echo "pip install -r requirements.txt" >> CHANGELOG.md
+        echo "python weak_password_checker.py --help" >> CHANGELOG.md
+        echo "\`\`\`" >> CHANGELOG.md
+
+    - name: Create release package
+      run: |
+        mkdir -p release-package
+        cp weak_password_checker.py release-package/
+        cp requirements.txt release-package/
+        cp weak_passwords.txt release-package/
+        cp hosts_example.csv release-package/
+        cp README.md release-package/
+        
+        # Create a simple installation script
+        cat > release-package/install.sh << 'EOF'
+        #!/bin/bash
+        echo "Installing Weak Password Checker..."
+        pip install -r requirements.txt
+        echo "Installation completed!"
+        echo "Usage: python weak_password_checker.py --help"
+        EOF
+        chmod +x release-package/install.sh
+        
+        # Create ZIP archive
+        cd release-package
+        zip -r ../weak-password-checker-${{ steps.tag.outputs.tag_name }}.zip .
+        cd ..
+        
+        # Create TAR.GZ archive
+        tar -czf weak-password-checker-${{ steps.tag.outputs.tag_name }}.tar.gz -C release-package .
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.tag.outputs.tag_name }}
+        name: Weak Password Checker ${{ steps.tag.outputs.tag_name }}
+        body_path: CHANGELOG.md
+        draft: false
+        prerelease: false
+        files: |
+          weak-password-checker-${{ steps.tag.outputs.tag_name }}.zip
+          weak-password-checker-${{ steps.tag.outputs.tag_name }}.tar.gz
+        generate_release_notes: true
+
+  docker-build:
+    needs: validate-release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Get tag name
+      id: tag
+      run: echo "tag_name=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Create Dockerfile
+      run: |
+        cat > Dockerfile << 'EOF'
+        FROM python:3.11-slim
+
+        WORKDIR /app
+
+        # Install dependencies
+        COPY requirements.txt .
+        RUN pip install --no-cache-dir -r requirements.txt
+
+        # Copy application files
+        COPY weak_password_checker.py .
+        COPY weak_passwords.txt .
+        COPY hosts_example.csv .
+
+        # Create a non-root user
+        RUN useradd -m -u 1000 checker && chown -R checker:checker /app
+        USER checker
+
+        ENTRYPOINT ["python", "weak_password_checker.py"]
+        CMD ["--help"]
+        EOF
+
+    - name: Build Docker image
+      run: |
+        docker build -t weak-password-checker:${{ steps.tag.outputs.tag_name }} .
+        docker build -t weak-password-checker:latest .
+
+    - name: Save Docker image
+      run: |
+        docker save weak-password-checker:${{ steps.tag.outputs.tag_name }} | gzip > weak-password-checker-docker-${{ steps.tag.outputs.tag_name }}.tar.gz
+
+    - name: Upload Docker image as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image
+        path: weak-password-checker-docker-${{ steps.tag.outputs.tag_name }}.tar.gz

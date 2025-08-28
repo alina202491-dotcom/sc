@@ -1,5 +1,12 @@
 # 弱密码检测工具
 
+[![CI](https://github.com/username/weak-password-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/username/weak-password-checker/actions/workflows/ci.yml)
+[![Security Scan](https://github.com/username/weak-password-checker/actions/workflows/security.yml/badge.svg)](https://github.com/username/weak-password-checker/actions/workflows/security.yml)
+[![Code Quality](https://github.com/username/weak-password-checker/actions/workflows/code-quality.yml/badge.svg)](https://github.com/username/weak-password-checker/actions/workflows/code-quality.yml)
+[![Performance](https://github.com/username/weak-password-checker/actions/workflows/performance.yml/badge.svg)](https://github.com/username/weak-password-checker/actions/workflows/performance.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+
 这是一个用于检测多个主机弱密码的自动化脚本。脚本能够从表格文件读取主机列表，尝试访问登录页面，并使用常见弱密码进行登录尝试，最后生成检测结果报告。
 
 ## 功能特性
@@ -152,6 +159,36 @@ A: 编辑 `weak_passwords.txt` 文件，每行添加一个密码
 
 ### Q: 脚本会被WAF拦截吗？
 A: 脚本包含基本的延迟机制，但对于有WAF保护的站点可能需要调整请求频率
+
+## 🔄 CI/CD 和自动化
+
+本项目使用 GitHub Actions 进行持续集成和自动化测试：
+
+### 工作流状态
+- **CI 工作流**: 在每次代码提交时自动运行测试
+- **安全扫描**: 定期检查依赖漏洞和代码安全问题
+- **代码质量**: 自动检查代码格式和质量
+- **性能测试**: 定期运行性能基准测试
+- **文档生成**: 自动更新项目文档
+
+### 自动化功能
+- 🤖 **Dependabot**: 自动更新依赖包
+- 🎨 **代码格式化**: PR 时自动格式化代码
+- 🔒 **安全扫描**: 每日自动安全检查
+- 📦 **自动发布**: 标签推送时自动创建发布包
+
+### 贡献指南
+1. Fork 本仓库
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+所有 PR 都会自动运行 CI 检查，包括：
+- ✅ 代码格式检查
+- ✅ 单元测试
+- ✅ 安全扫描
+- ✅ 性能测试
 
 ## 许可证
 

@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 项目文档
+    url: https://github.com/username/weak-password-checker/blob/main/README.md
+    about: 查看完整的项目文档和使用指南
+  - name: 💬 讨论区
+    url: https://github.com/username/weak-password-checker/discussions
+    about: 参与讨论、提问或分享使用经验
+  - name: 🔒 私密安全报告
+    url: https://github.com/username/weak-password-checker/security/advisories/new
+    about: 报告严重的安全漏洞（请使用私密报告）
+  - name: 📧 联系维护者
+    url: mailto:maintainer@example.com
+    about: 通过邮件联系项目维护者
